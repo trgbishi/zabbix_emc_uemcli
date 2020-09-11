@@ -17,7 +17,7 @@ import urllib3
 LOG_FILENAME = "/tmp/emc_uemcli_script.log"
 uemcli_command = "/opt/emc/uemcli/bin/uemcli.sh"
 uemcli_logger = logging.getLogger("uemcli_logger")
-uemcli_logger.setLevel(logging.DEBUG)
+uemcli_logger.setLevel(logging.CRITICAL)
 
 # Set handler
 uemcli_handler = logging.handlers.RotatingFileHandler(LOG_FILENAME, maxBytes=1024*1024, backupCount=5)
