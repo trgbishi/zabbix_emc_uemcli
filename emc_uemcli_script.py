@@ -51,11 +51,13 @@ def send_data_to_zabbix(zabbix_data, storage_name):
         os.remove(temp_file)
         return send_code
 
-def discover_device(discover_key,device_name,command,zabbix_host_name):
+def discover_device(discover_key,device_name,command,zabbix_host_name,grep_key,awk_num):
     ret_data = []
     timestampnow = int(time.time())
     uemcli_logger.debug("start to discover: "+discover_key)
-    list_dev_name = os.popen(command).read().splitlines()
+    lines = os.popen(command).read().splitlines()
+
+    list_dev_name = as_linux_awk(as_linux_grep(lines,grep_key),awk_num)
     uemcli_logger.debug("list_dev_name: ")
     uemcli_logger.debug(list_dev_name)
     tmp_list = []
@@ -66,6 +68,32 @@ def discover_device(discover_key,device_name,command,zabbix_host_name):
     ret_data.append("%s %s %s %s" % (zabbix_host_name, discover_key, timestampnow,convert_to_zabbix_json(tmp_list)))
     return ret_data
 
+def as_linux_grep(lines,grep_key):
+    grep_line = []
+    for line in lines:
+        if grep_key in line:
+            grep_line.append(line)
+    uemcli_logger.debug("grep_line: ")
+    uemcli_logger.debug(grep_line)
+    uemcli_logger.debug("grep_key: ")
+    uemcli_logger.debug(grep_key)
+    return grep_line
+
+def as_linux_awk(lines,awk_num):
+    awk_num-=1
+    ret_list = []
+    uemcli_logger.debug("lines: ")
+    uemcli_logger.debug(lines)
+    uemcli_logger.debug("awk_num: ")
+    uemcli_logger.debug(awk_num)
+    for line in lines:
+        tmp_list = line.split()
+        ret_list.append(tmp_list[awk_num]) if len(tmp_list)>awk_num else ret_list.append('')
+    uemcli_logger.debug("ret_list: ")
+    uemcli_logger.debug(ret_list)
+
+    return ret_list
+
 
 def discover(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_discover_key):
     send2server_data = []
@@ -74,85 +102,85 @@ def discover(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_dis
     for discover_key in list_discover_key:
         uemcli_logger.debug("start to discover: ")
         if discover_key=='disk':
-            command = cmd+" /env/disk show|grep '   ID'|awk '{print$4}'"
+            command = cmd+" /env/disk show"
             device_name = "{#DISKNAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='sp':
-            command = cmd+" /env/sp show -detail|grep '   ID'|awk '{print$4}'"
+            command = cmd+" /env/sp show -detail"
             device_name = "{#SPNAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='battery':
-            command = cmd+" /env/bat show|grep '   ID'|awk '{print$4}'"
+            command = cmd+" /env/bat show"
             device_name = "{#BATTERYNAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='power_supply':
-            command = cmd+" /env/ps show|grep '   ID'|awk '{print$4}'"
+            command = cmd+" /env/ps show"
             device_name = "{#PSNAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='lcc':
-            command = cmd+" /env/lcc show|grep '   ID'|awk '{print$4}'"
+            command = cmd+" /env/lcc show"
             device_name = "{#LCCNAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='ssd':
-            command = cmd+" /env/ssd show|grep '   ID'|awk '{print$4}'"
+            command = cmd+" /env/ssd show"
             device_name = "{#SSDNAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='dae':
-            command = cmd+" /env/dae show|grep '   ID'|awk '{print$4}'"
+            command = cmd+" /env/dae show"
             device_name = "{#DAENAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='dpe':
-            command = cmd+" /env/dpe show|grep '   ID'|awk '{print$4}'"
+            command = cmd+" /env/dpe show"
             device_name = "{#DPENAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='mm':
-            command = cmd+" /env/mm show|grep '   ID'|awk '{print$4}'"
+            command = cmd+" /env/mm show"
             device_name = "{#MMNAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='ssc':
-            command = cmd+" /env/ssc show|grep '   ID'|awk '{print$4}'"
+            command = cmd+" /env/ssc show"
             device_name = "{#SSCNAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='fan':
-            command = cmd+" /env/fan show|grep '   ID'|awk '{print$4}'"
+            command = cmd+" /env/fan show"
             device_name = "{#FANNAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='iomodule':
-            command = cmd+" /env/iomodule show|grep '   ID'|awk '{print$4}'"
+            command = cmd+" /env/iomodule show"
             device_name = "{#IOMODULENAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='pool':
-            command = cmd+" /stor/config/pool show -detail|grep '   ID'|awk '{print$4}'"
+            command = cmd+" /stor/config/pool show -detail"
             device_name = "{#POOLNAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='pool':
-            command = cmd+" /stor/prov/luns/lun show -detail|grep '   ID'|awk '{print$4}'"
+            command = cmd+" /stor/prov/luns/lun show -detail"
             device_name = "{#LUNNAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='nas':
-            command = cmd+" /net/nas/server show -detail|grep '   ID'|awk '{print$4}'"
+            command = cmd+" /net/nas/server show -detail"
             device_name = "{#NASNAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='iscsi':
-            command = cmd+" /net/iscsi/node show |grep '   ID'|awk '{print$4}'"
+            command = cmd+" /net/iscsi/node show "
             device_name = "{#ISCSINAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='eth_port':
-            command = cmd+" /net/port/eth show -detail|grep '   ID'|awk '{print$4}'"
+            command = cmd+" /net/port/eth show -detail"
             device_name = "{#ETHPORTNAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='sas_port':
-            command = cmd+" /net/port/sas show |grep '   ID'|awk '{print$4}'"
+            command = cmd+" /net/port/sas show "
             device_name = "{#SASPORTNAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='fc_port':
-            command = cmd+" /net/port/fc show |grep '   ID'|awk '{print$4}'"
+            command = cmd+" /net/port/fc show "
             device_name = "{#FCPORTNAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
         elif discover_key=='fc_port':
-            command = cmd+" /net/port/unc show -detail|grep '   ID'|awk '{print$4}'"
+            command = cmd+" /net/port/unc show -detail"
             device_name = "{#UNCPORTNAME}"
-            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name))
+            send2server_data.extend(discover_device(discover_key,device_name,command,zabbix_host_name,'   ID',4))
             
     return send_data_to_zabbix(send2server_data, zabbix_host_name)
             
@@ -167,12 +195,13 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
         uemcli_logger.debug("start to discover: ")
         if discover_key=='disk':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /env/disk show |grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /env/disk show |grep 'Health state'|awk '{print$5}'").read().splitlines()
-            list_capacity = os.popen( cmd+" /env/disk show -detail|grep 'Capacity'|awk '{print$3}'").read().splitlines()
-            list_user_capacity = os.popen( cmd+" /env/disk show|grep 'User capacity'|awk '{print$4}'").read().splitlines()
-            list_current_speed = os.popen( cmd+" /env/disk show -detail|grep 'Current speed'|awk '{print$4}'").read().splitlines()
-            list_max_speed = os.popen( cmd+" /env/disk show -detail|grep 'Maximum speed'|awk '{print$4}'").read().splitlines()
+            lines = os.popen( cmd+" /env/disk show").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
+            list_capacity = as_linux_awk(as_linux_grep(lines,'Capacity'),3)
+            list_user_capacity = as_linux_awk(as_linux_grep(lines,'User capacity'),4)
+            list_current_speed = as_linux_awk(as_linux_grep(lines,'Current speed'),4)
+            list_max_speed = as_linux_awk(as_linux_grep(lines,'Maximum speed'),4)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             uemcli_logger.debug("list_capacity: ")
@@ -193,9 +222,10 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='sp':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /env/sp show -detail|grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /env/sp show -detail|grep 'Health state'|awk '{print$5}'").read().splitlines()
-            list_memory_size = os.popen( cmd+" /env/sp show -detail|grep 'Memory size'|awk '{print$4}'").read().splitlines()
+            lines = os.popen( cmd+" /env/sp show -detail").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
+            list_memory_size = as_linux_awk(as_linux_grep(lines,'Memory size'),4)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             count = 0
@@ -205,8 +235,9 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='battery':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /env/bat show |grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /env/bat show |grep 'Health state'|awk '{print$5}'").read().splitlines()
+            lines = os.popen( cmd+" /env/bat show ").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             count = 0
@@ -215,8 +246,9 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='power_supply':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /env/ps show |grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /env/ps show |grep 'Health state'|awk '{print$5}'").read().splitlines()
+            lines = os.popen( cmd+" /env/ps show ").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             count = 0
@@ -225,8 +257,9 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='lcc':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /env/lcc show |grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /env/lcc show |grep 'Health state'|awk '{print$5}'").read().splitlines()
+            lines = os.popen( cmd+" /env/lcc show ").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             count = 0
@@ -235,8 +268,9 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='ssd':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /env/ssd show |grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /env/ssd show |grep 'Health state'|awk '{print$5}'").read().splitlines()
+            lines = os.popen( cmd+" /env/ssd show ").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             count = 0
@@ -245,10 +279,11 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='dae':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /env/dae show |grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /env/dae show |grep 'Health state'|awk '{print$5}'").read().splitlines()
-            list_power = os.popen( cmd+" /env/dae show |grep 'Power (Present)'|awk '{print$4}'").read().splitlines()            
-            list_temperature = os.popen( cmd+" /env/dae show -detail|grep 'Temperature (Present)'|awk '{print$6}'").read().splitlines()   
+            lines = os.popen( cmd+" /env/dae show ").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
+            list_power = as_linux_awk(as_linux_grep(lines,'Power (Present)'),4)
+            list_temperature = as_linux_awk(as_linux_grep(lines,'Temperature (Present)'),6)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             count = 0
@@ -259,10 +294,11 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='dpe':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /env/dpe show |grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /env/dpe show |grep 'Health state'|awk '{print$5}'").read().splitlines()
-            list_power = os.popen( cmd+" /env/dpe show -detail|grep 'Power (Present)'|awk '{print$4}'").read().splitlines()           
-            list_temperature = os.popen( cmd+" /env/dpe show -detail|grep 'Temperature (Present)'|awk '{print$6}'").read().splitlines()   
+            lines = os.popen( cmd+" /env/dpe show ").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
+            list_power = as_linux_awk(as_linux_grep(lines,'Power (Present)'),4)
+            list_temperature = as_linux_awk(as_linux_grep(lines,'Temperature (Present)'),6)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)   
             uemcli_logger.debug("list_power: ")
@@ -277,8 +313,9 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='mm':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /env/mm show |grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /env/mm show |grep 'Health state'|awk '{print$5}'").read().splitlines()
+            lines = os.popen( cmd+" /env/mm show ").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             count = 0
@@ -287,8 +324,9 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='ssc':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /env/ssc show |grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /env/ssc show |grep 'Health state'|awk '{print$5}'").read().splitlines()
+            lines = os.popen( cmd+" /env/ssc show ").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             count = 0
@@ -297,8 +335,9 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='fan':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /env/fan show |grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /env/fan show |grep 'Health state'|awk '{print$5}'").read().splitlines()
+            lines = os.popen( cmd+" /env/fan show ").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             count = 0
@@ -307,8 +346,9 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='iomodule':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /env/iomodule show |grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /env/iomodule show |grep 'Health state'|awk '{print$5}'").read().splitlines()
+            lines = os.popen( cmd+" /env/iomodule show ").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             count = 0
@@ -317,14 +357,15 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='pool':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /stor/config/pool show -detail |grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /stor/config/pool show -detail |grep 'Health state'|awk '{print$5}'").read().splitlines()
-            list_total_space = os.popen( cmd+" /stor/config/pool show -detail |grep 'Total space'|awk '{print$4}'").read().splitlines()
-            list_current_allocation = os.popen( cmd+" /stor/config/pool show -detail |grep 'Current allocation'|awk '{print$4}'").read().splitlines()
-            list_preallocated_space = os.popen( cmd+" /stor/config/pool show -detail |grep 'Preallocated space'|awk '{print$4}'").read().splitlines()
-            list_remaining_space = os.popen( cmd+" /stor/config/pool show -detail |grep 'Remaining space'|awk '{print$4}'").read().splitlines()
-            list_subscription = os.popen( cmd+" /stor/config/pool show -detail |grep 'Subscription  '|awk '{print$3}'").read().splitlines()
-            list_subscription_percent = os.popen( cmd+" /stor/config/pool show -detail |grep 'Subscription percent'|awk '{print$4}'").read().splitlines()
+            lines = os.popen( cmd+" /stor/config/pool show -detail ").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
+            list_total_space = as_linux_awk(as_linux_grep(lines,'Total space'),4)
+            list_current_allocation = as_linux_awk(as_linux_grep(lines,'Current allocation'),4)
+            list_preallocated_space = as_linux_awk(as_linux_grep(lines,'Preallocated space'),4)
+            list_remaining_space = as_linux_awk(as_linux_grep(lines,'Remaining space'),4)
+            list_subscription = as_linux_awk(as_linux_grep(lines,'Subscription  '),3)
+            list_subscription_percent = as_linux_awk(as_linux_grep(lines,'Subscription percent'),4)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             uemcli_logger.debug("list_total_space: ")
@@ -351,10 +392,11 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='lun':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+"/stor/prov/luns/lun show -detail|grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+"/stor/prov/luns/lun show -detail|grep 'Health state'|awk '{print$5}'").read().splitlines()
-            list_size = os.popen( cmd+"/stor/prov/luns/lun show -detail|grep 'Size'|awk '{print$3}'").read().splitlines()
-            list_current_allocation = os.popen( cmd+"/stor/prov/luns/lun show -detail|grep 'Current allocation'|awk '{print$4}'").read().splitlines()
+            lines = os.popen( cmd+"/stor/prov/luns/lun show -detail").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
+            list_size = as_linux_awk(as_linux_grep(lines,'Size'),3)
+            list_current_allocation = as_linux_awk(as_linux_grep(lines,'Current allocation'),4)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             uemcli_logger.debug("list_size: ")
@@ -369,9 +411,10 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='nas':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /net/nas/server show |grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /net/nas/server show |grep 'Health state'|awk '{print$5}'").read().splitlines()
-            list_fs_used = os.popen( cmd+" /net/nas/server show |grep 'File space used'|awk '{print$5}'").read().splitlines()
+            lines = os.popen( cmd+" /net/nas/server show ").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
+            list_fs_used = as_linux_awk(as_linux_grep(lines,'File space used'),5)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             uemcli_logger.debug("list_fs_used: ")
@@ -383,8 +426,9 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='iscsi':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /net/iscsi/node show |grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /net/iscsi/node show|grep 'Health state'|awk '{print$5}'").read().splitlines()
+            lines = os.popen( cmd+" /net/iscsi/node show ").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             count = 0
@@ -393,9 +437,10 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='eth_port':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /net/port/eth show -detail |grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /net/port/eth show -detail |grep 'Health state'|awk '{print$5}'").read().splitlines()
-            list_speed = os.popen( cmd+" /net/port/eth show -detail |grep '  Speed  '|awk '{print$3}'").read().splitlines()
+            lines = os.popen( cmd+" /net/port/eth show -detail ").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
+            list_speed = as_linux_awk(as_linux_grep(lines,'  Speed  '),3)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             uemcli_logger.debug("list_speed: ")
@@ -407,9 +452,10 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='sas_port':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /net/port/sas show |grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /net/port/sas show |grep 'Health state'|awk '{print$5}'").read().splitlines()
-            list_speed = os.popen( cmd+" /net/port/sas show |grep '  Speed  '|awk '{print$3}'").read().splitlines()
+            lines = os.popen( cmd+" /net/port/sas show ").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
+            list_speed = as_linux_awk(as_linux_grep(lines,'  Speed  '),3)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             uemcli_logger.debug("list_speed: ")
@@ -421,9 +467,10 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='fc_port':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /net/port/fc show|grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /net/port/fc show|grep 'Health state'|awk '{print$5}'").read().splitlines()
-            list_speed = os.popen( cmd+" /net/port/fc show|grep 'Speed'|awk '{print$3}'").read().splitlines()
+            lines = os.popen( cmd+" /net/port/fc show").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
+            list_speed = as_linux_awk(as_linux_grep(lines,'Speed'),3)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             uemcli_logger.debug("list_speed: ")
@@ -435,8 +482,9 @@ def get_state(uemcli_user, uemcli_password, uemcli_ip, zabbix_host_name, list_di
                 count+=1
         elif discover_key=='unc_port':
             uemcli_logger.debug("start to get state: "+discover_key)
-            list_dev_name = os.popen( cmd+" /net/port/unc show -detial|grep '   ID'|awk '{print$4}'").read().splitlines()
-            list_health_state = os.popen( cmd+" /net/port/unc show -detial|grep 'Health state'|awk '{print$5}'").read().splitlines()
+            lines = os.popen( cmd+" /net/port/unc show -detial").read().splitlines()
+            list_dev_name = as_linux_awk(as_linux_grep(lines,'   ID'),4)
+            list_health_state = as_linux_awk(as_linux_grep(lines,'Health state'),5)
             uemcli_logger.debug("list_health_state: ")
             uemcli_logger.debug(list_health_state)
             count = 0
